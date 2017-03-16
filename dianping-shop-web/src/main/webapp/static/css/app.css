@@ -1,0 +1,12 @@
+.rel{position:relative;}
+.footer p {
+	margin: 0;
+	padding: 10px 0;
+	text-align: center;
+	background: #3BB4F2;
+}
+
+.footer a {
+	color: #000000
+}
+.location-btn{width:92px; height:43px; line-height:43px; text-align:center; border:1px solid #ccc; background-color:#eee; color:#333; position:absolute; right:-72px; top:0;}
