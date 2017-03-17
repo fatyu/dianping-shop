@@ -1,4 +1,4 @@
-package ren.xiayi.dianping.shop.service.common;
+package ren.xiayi.dianping.shop.service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +10,7 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
@@ -20,39 +21,91 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.Args;
 import org.apache.http.util.CharArrayBuffer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import ren.xiayi.dianping.shop.dao.CategoryDao;
+import ren.xiayi.dianping.shop.entity.Category;
 import ren.xiayi.dianping.shop.utils.HttpConnectionUtil;
 import ren.xiayi.dianping.shop.utils.JsonUtils;
 
 /**
- * 1.使用httpclient获取返回数据json
- * 2.使用jackson进行string->map转换
- * 3.保存数据库
+ *
+ * 类别数据操作Service
  * @author fatyu
  */
+@Component
+public class CategoryService {
+	@Autowired
+	private CategoryDao categoryDao;
 
-public class CategoryProcesser {
+	public void save(Category category) {
+		categoryDao.save(category);
+	}
 
+	/**
+	 * 1.使用httpclient获取返回数据json
+	 * 2.使用jackson进行string->map转换
+	 * 3.保存数据库
+	 */
 	@SuppressWarnings("unchecked")
-	public static void process() throws UnsupportedEncodingException {
+	public void reloadCategories() {
 		CloseableHttpClient client = HttpConnectionUtil.getHttpClient();
 		String json = getJson(client);
 		Map<String, Object> map = JsonUtils.stringToObject(json, Map.class);
 		Map<String, Object> msg = (Map<String, Object>) map.get("msg");
 		List<Map<String, Object>> cates = (List<Map<String, Object>>) msg.get("categoryids");
 		for (Map<String, Object> cate : cates) {
-			cate.get("name");
-			cate.get("key");
+			String name = cate.get("name").toString();
+			Long id = NumberUtils.toLong(cate.get("key").toString());
+			Category category = new Category(id, name);
+			this.save(category);
 			List<Map<String, Object>> subCates = (List<Map<String, Object>>) cate.get("children");
 			for (Map<String, Object> subCate : subCates) {
-				System.out.println(subCate.get("name") + "<<>>>" + subCate.get("key"));
+				long subId = NumberUtils.toLong(subCate.get("key").toString());
+				Category subCat = new Category(subId, subCate.get("name").toString(), id);
+				this.save(subCat);
 			}
-
 		}
 	}
 
-	public static String toString(final HttpEntity entity, final Charset defaultCharset)
-			throws IOException, ParseException {
+	/**
+	 * 获取点评的分类json数据
+	 * @param httpclient
+	 * @return json字符串
+	 */
+	private String getJson(CloseableHttpClient client) {
+		HttpGet get = new HttpGet("http://dpindex.dianping.com/ajax/categorylist?cityid=1&shopids=");
+		CloseableHttpResponse execute = null;
+		try {
+			execute = client.execute(get);
+			HttpEntity entity = execute.getEntity();
+			String string = toString(entity, Charset.defaultCharset());
+			if (null == entity) {
+				return null;
+			} else if (execute.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+				return null;
+			} else {
+				return string;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			try {
+				if (execute != null) {
+					execute.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * 获取http请求响应的内容
+	 */
+	private String toString(final HttpEntity entity, final Charset defaultCharset) throws IOException, ParseException {
 		final InputStream instream = entity.getContent();
 		if (instream == null) {
 			return null;
@@ -92,39 +145,4 @@ public class CategoryProcesser {
 		}
 	}
 
-	private static String getJson(CloseableHttpClient client) throws UnsupportedEncodingException {
-		HttpGet get = new HttpGet("http://dpindex.dianping.com/ajax/categorylist?cityid=1&shopids=");
-		CloseableHttpResponse execute = null;
-		try {
-			execute = client.execute(get);
-			HttpEntity entity = execute.getEntity();
-			String string = toString(entity, Charset.defaultCharset());
-			if (null == entity) {
-				return null;
-			} else if (execute.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-				return null;
-			} else {
-				return string;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		} finally {
-			try {
-				if (execute != null) {
-					execute.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public static void main(String[] args) {
-		try {
-			CategoryProcesser.process();
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-	}
 }
