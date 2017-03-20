@@ -44,6 +44,10 @@ public class CityService {
 		cityDao.save(city);
 	}
 
+	public Iterable<City> findAll() {
+		return cityDao.findAll();
+	}
+
 	/**
 	 * 1.使用httpclient获取返回数据xml
 	 * 2.使用进行xml字符串->Object转换
@@ -59,6 +63,7 @@ public class CityService {
 		List<City> citys = (List<City>) xStream.fromXML(xml);
 		for (City city : citys) {
 			this.save(city);
+			System.out.println(city.getName() + "|" + city.getEnname() + "|" + city.getId());
 		}
 	}
 

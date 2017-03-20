@@ -3,8 +3,6 @@ package ren.xiayi.dianping.shop.entity;
 import java.io.Serializable;
 
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
@@ -18,7 +16,6 @@ public abstract class BaseEntity implements Serializable {
 
 	@Id
 	@Column(name = "id", nullable = false, unique = true)
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Long getId() {
 		return id;
 	}

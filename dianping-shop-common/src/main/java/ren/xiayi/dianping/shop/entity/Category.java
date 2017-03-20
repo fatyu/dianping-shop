@@ -8,6 +8,10 @@ import javax.persistence.Table;
 @Table(name = "category")
 public class Category extends BaseEntity {
 
+	public Category() {
+		super();
+	}
+
 	public Category(Long id, String name) {
 		super();
 		this.id = id;

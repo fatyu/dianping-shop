@@ -12,6 +12,20 @@ public class Area extends BaseEntity {
 	private String name;
 	private Long cid;
 
+	public Area() {
+		super();
+	}
+
+	public Area(Long id, String name) {
+		this.id = id;
+		this.name = name;
+	}
+
+	public Area(Long id, String name, String enname) {
+		this(id, name);
+		this.enname = enname;
+	}
+
 	@Column(name = "enname")
 	public String getEnname() {
 		return enname;
