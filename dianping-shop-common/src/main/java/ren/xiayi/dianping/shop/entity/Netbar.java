@@ -17,6 +17,26 @@ public class Netbar extends BaseEntity {
 	private Integer avgCost;
 	private Double lat;
 	private Double lon;
+	private String dpUrl;
+	private String streetName;
+
+	@Column(name = "dp_url")
+	public String getDpUrl() {
+		return dpUrl;
+	}
+
+	public void setDpUrl(String dpUrl) {
+		this.dpUrl = dpUrl;
+	}
+
+	@Column(name = "street_name")
+	public String getStreetName() {
+		return streetName;
+	}
+
+	public void setStreetName(String streetName) {
+		this.streetName = streetName;
+	}
 
 	@Column(name = "name")
 	public String getName() {

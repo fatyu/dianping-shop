@@ -9,6 +9,7 @@ import ren.xiayi.dianping.shop.entity.JsonResponseMsg;
 import ren.xiayi.dianping.shop.service.AreaService;
 import ren.xiayi.dianping.shop.service.CategoryService;
 import ren.xiayi.dianping.shop.service.CityService;
+import ren.xiayi.dianping.shop.service.NetbarService;
 
 @Controller
 @RequestMapping("/reload")
@@ -21,6 +22,9 @@ public class DataReloadController extends BaseController {
 
 	@Autowired
 	private AreaService areaService;
+
+	@Autowired
+	private NetbarService netbarService;
 
 	@RequestMapping(value = "city")
 	@ResponseBody
@@ -46,6 +50,15 @@ public class DataReloadController extends BaseController {
 	public JsonResponseMsg area() {
 		JsonResponseMsg res = new JsonResponseMsg();
 		areaService.reloadAllArea();
+		res.fill(0, "success");
+		return res;
+	}
+
+	@RequestMapping(value = "netbarList")
+	@ResponseBody
+	public JsonResponseMsg netbarList() {
+		JsonResponseMsg res = new JsonResponseMsg();
+		netbarService.loadAllNetbarInfo();
 		res.fill(0, "success");
 		return res;
 	}
