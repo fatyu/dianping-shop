@@ -1,5 +1,11 @@
 package ren.xiayi.dianping.shop.web.controller;
 
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.math.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +31,8 @@ public class DataReloadController extends BaseController {
 
 	@Autowired
 	private NetbarService netbarService;
+
+	private static Logger logger = LoggerFactory.getLogger(DataReloadController.class);
 
 	@RequestMapping(value = "city")
 	@ResponseBody
@@ -58,7 +66,21 @@ public class DataReloadController extends BaseController {
 	@ResponseBody
 	public JsonResponseMsg netbarList() {
 		JsonResponseMsg res = new JsonResponseMsg();
-		netbarService.loadAllNetbarInfo();
+		List<Map<String, Object>> areas = areaService.queryAllAreaMap();
+		for (Map<String, Object> area : areas) {
+			long cid = NumberUtils.toLong(area.get("cid").toString());
+			long id = NumberUtils.toLong(area.get("id").toString());
+			logger.error("start------------------------------------- is [" + cid + "," + id + "," + "rank" + "]");
+			for (int p = 1; p < 50; p++) {
+				boolean continue_ = netbarService.fetchNetbarInfos(id, 20042, "rank", cid, p);
+				if (continue_) {
+					continue;
+				} else {
+					break;
+				}
+			}
+			logger.error("end------------------------------------- is [" + cid + "," + id + "," + "rank" + "]");
+		}
 		res.fill(0, "success");
 		return res;
 	}

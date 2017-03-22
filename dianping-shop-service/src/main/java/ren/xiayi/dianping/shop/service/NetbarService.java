@@ -1,9 +1,7 @@
 package ren.xiayi.dianping.shop.service;
 
 import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jsoup.Jsoup;
@@ -14,8 +12,9 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Lists;
+
 import ren.xiayi.dianping.shop.dao.NetbarDao;
-import ren.xiayi.dianping.shop.dao.QueryDao;
 import ren.xiayi.dianping.shop.entity.Netbar;
 
 /**
@@ -29,10 +28,11 @@ public class NetbarService {
 	@Autowired
 	private NetbarDao netbarDao;
 
-	@Autowired
-	private QueryDao queryDao;
-
 	public void save(Netbar netbar) {
+		netbarDao.save(netbar);
+	}
+
+	public void save(List<Netbar> netbar) {
 		netbarDao.save(netbar);
 	}
 
@@ -43,13 +43,8 @@ public class NetbarService {
 	 * @param city 城市id
 	 * @param p 获取数据页数
 	 */
-	public void fetchNetbarInfos(long region, long category, String type, long city, int p) {
-		try {
-			Thread.sleep(RandomUtils.nextInt(1000) + 100);
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-			logger.error("input is [" + city + "," + region + "," + type + "," + p + "]");
-		}
+	public boolean fetchNetbarInfos(long region, long category, String type, long city, int p) {
+
 		int timeout = 1000;
 		String baseInfoUrl = "http://dpindex.dianping.com/dpindex?region=" + region + "&category=" + category + "&type="
 				+ type + "&city=" + city + "&p=" + p;
@@ -60,6 +55,7 @@ public class NetbarService {
 			if (outerDiv != null) {
 				Elements lis = outerDiv.getElementsByTag("li");
 				if (lis.size() > 0) {
+					List<Netbar> netbars = Lists.newArrayList();
 					for (Element li : lis) {
 						Elements a = li.getElementsByTag("a");
 						Element element = a.get(0);
@@ -81,25 +77,23 @@ public class NetbarService {
 						netbar.setSubName(subName);
 						netbar.setDpUrl(href);
 						netbar.setStreetName(street);
-						netbarDao.save(netbar);
+						netbar.setCid(city);
+						netbar.setAid(region);
+						netbars.add(netbar);
 					}
-					p++;
-					fetchNetbarInfos(region, category, type, city, p);
+					if (netbars.size() > 0) {
+						save(netbars);
+						return true;
+					}
+					return false;
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return false;
 	}
-
-	public void loadAllNetbarInfo() {
-		List<Map<String, Object>> areas = queryDao.queryMap("select cid,id from area");
-		for (Map<String, Object> area : areas) {
-			long cid = NumberUtils.toLong(area.get("cid").toString());
-			long id = NumberUtils.toLong(area.get("id").toString());
-			fetchNetbarInfos(id, 20042, "rank", cid, 1);
-			logger.info(" 完成了[cid:" + cid + ",id:" + id + "]的数据抓取");
-		}
-	}
-
+	//http://www.dianping.com/shop/77312616 店铺基本信息
+	//http://www.dianping.com/ajax/json/shoppic/find?type=all_new&typeId=116&shopId=77312616&shopType=30&full=0&href=1&firstPos=1&count=100  抓取商铺图片
+	//http://www.dianping.com/shop/77312616/review_more 店铺所有评论
 }

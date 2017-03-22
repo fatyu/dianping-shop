@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ren.xiayi.dianping.shop.dao.AreaDao;
+import ren.xiayi.dianping.shop.dao.QueryDao;
 import ren.xiayi.dianping.shop.entity.Area;
 import ren.xiayi.dianping.shop.entity.City;
 import ren.xiayi.dianping.shop.entity.Street;
@@ -44,6 +45,9 @@ public class AreaService {
 	private StreetService streetService;
 	@Autowired
 	private CityService cityService;
+
+	@Autowired
+	private QueryDao queryDao;
 
 	public void save(Area area) {
 		areaDao.save(area);
@@ -167,5 +171,9 @@ public class AreaService {
 		} finally {
 			instream.close();
 		}
+	}
+
+	public List<Map<String, Object>> queryAllAreaMap() {
+		return queryDao.queryMap("select cid,id from area order by cid");
 	}
 }

@@ -19,6 +19,9 @@ public class Netbar extends BaseEntity {
 	private Double lon;
 	private String dpUrl;
 	private String streetName;
+	private Long cid;
+
+	private Long aid;
 
 	@Column(name = "dp_url")
 	public String getDpUrl() {
@@ -117,6 +120,24 @@ public class Netbar extends BaseEntity {
 
 	public void setLon(Double lon) {
 		this.lon = lon;
+	}
+
+	@Column(name = "cid")
+	public Long getCid() {
+		return cid;
+	}
+
+	public void setCid(Long cid) {
+		this.cid = cid;
+	}
+
+	@Column(name = "aid")
+	public Long getAid() {
+		return aid;
+	}
+
+	public void setAid(Long aid) {
+		this.aid = aid;
 	}
 
 }
