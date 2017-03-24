@@ -33,6 +33,8 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.Lists;
 
 import ren.xiayi.dianping.shop.dao.NetbarDao;
+import ren.xiayi.dianping.shop.dao.QueryDao;
+import ren.xiayi.dianping.shop.entity.Img;
 import ren.xiayi.dianping.shop.entity.Netbar;
 import ren.xiayi.dianping.shop.utils.HttpConnectionUtil;
 import ren.xiayi.dianping.shop.utils.JsonUtils;
@@ -173,17 +175,18 @@ public class NetbarService {
 			netbar.setScore(avgScoreVal);
 			netbar.setCommentCount(NumberUtils.toInt(StringUtils.substringBefore(commentCount, "条")));
 			netbar.setAvgCost(NumberUtils.toInt(StringUtils.substringBetween(avgCost, "：", "元")));
-			Element map = doc.getElementById("map");//获取经纬度;
-			Elements imgs = map.getElementsByTag("img");
-			if (imgs.size() > 0) {
-				String href = imgs.get(0).attr("src");
-				String ll = StringUtils.substringAfterLast(href, "|");
-				String[] llArr = StringUtils.split(ll, ",");
 
-				netbar.setQqLat(NumberUtils.toDouble(llArr[0]));
-				netbar.setQqLon(NumberUtils.toDouble(llArr[1]));
+			String html = doc.html();
+			String lat = StringUtils.substringBetween(html, "shopGlat: \"", "\",");
+			String lon = StringUtils.substringBetween(html, "shopGlng:\"", "\",");
 
-				String coords = netbar.getLon() + "," + netbar.getLat();
+			netbar.setQqLat(NumberUtils.toDouble(lat));
+			netbar.setQqLon(NumberUtils.toDouble(lon));
+
+			double qqLon = netbar.getQqLon();
+			double qqLat = netbar.getQqLat();
+			if (qqLon > 0 && qqLat > 0) {
+				String coords = qqLon + "," + qqLat;
 				try {
 					double[] lonLat = convert(coords);
 					netbar.setLat(lonLat[0]);
@@ -191,7 +194,6 @@ public class NetbarService {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-
 			}
 
 			this.save(netbar);//保存网吧数据
@@ -204,19 +206,18 @@ public class NetbarService {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private double[] convert(String coords) {
 		//进行编码转换
 		//http://api.map.baidu.com/geoconv/v1/?coords=114.21892734521,29.57542977892&ak=cofuT2iu779FwXsa61jUpxEq4xGufR4s&output=json&from=3
 		CloseableHttpClient client = HttpConnectionUtil.getHttpClient();
 		String llJson = getLLJson(client, coords);
 		Map<String, Object> map = JsonUtils.stringToObject(llJson, Map.class);
-		Map<String, Object> msg = (Map<String, Object>) map.get("result");
-		List<Map<String, Object>> imgs = (List<Map<String, Object>>) map.get("result");
+		List<Map<String, Object>> lls = (List<Map<String, Object>>) map.get("result");
 		double[] ll = new double[2];
-		for (Map<String, Object> i : imgs) {
+		for (Map<String, Object> i : lls) {
 			String x = i.get("x").toString();
 			String y = i.get("y").toString();
-			Long imgId = NumberUtils.toLong(StringUtils.substringAfterLast(i.get("href").toString(), "/"));
 			ll[0] = NumberUtils.toDouble(y);
 			ll[1] = NumberUtils.toDouble(x);
 			break;
@@ -276,11 +277,11 @@ public class NetbarService {
 			String imgUrl = i.get("full").toString();
 			Long imgId = NumberUtils.toLong(StringUtils.substringAfterLast(i.get("href").toString(), "/"));
 			System.out.println(imgId + "-------->" + imgUrl);
-			//			Img img = new Img();
-			//			img.setId(imgId);
-			//			img.setNid(shopId);
-			//			img.setUrl(imgUrl);
-			//			imgService.save(img);
+			Img img = new Img();
+			img.setId(imgId);
+			img.setNid(shopId);
+			img.setUrl(imgUrl);
+			imgService.save(img);
 		}
 	}
 
@@ -365,17 +366,17 @@ public class NetbarService {
 	 * 20 一页,判断获取的数据量是不是等于20,如果是的,加载下一页
 	 * @param netbar
 	 */
-	private void fetchNetbarComments(Netbar netbar) {
-		int timeout = 1000;
-		String baseInfoUrl = "http://www.dianping.com/shop/" + netbar.getId() + "/review_more?pageno=1";
-		Document doc;
-		try {
-			doc = Jsoup.connect(baseInfoUrl).timeout(timeout).get();//超时时间1s
-			Element basicInfo = doc.getElementById("basic-info");//获取基本信息
-			Element map = doc.getElementById("map");//获取经纬度;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public void fetchNetbarComments(Netbar netbar) {
+		//		int timeout = 1000;
+		//		String baseInfoUrl = "http://www.dianping.com/shop/" + netbar.getId() + "/review_more?pageno=1";
+		//		Document doc;
+		//		try {
+		//			doc = Jsoup.connect(baseInfoUrl).timeout(timeout).get();//超时时间1s
+		//			Element basicInfo = doc.getElementById("basic-info");//获取基本信息
+		//			Element map = doc.getElementById("map");//获取经纬度;
+		//		} catch (Exception e) {
+		//			e.printStackTrace();
+		//		}
 	}
 
 	public static void main(String[] args) {
@@ -383,5 +384,22 @@ public class NetbarService {
 		Netbar netbar = new Netbar();
 		netbar.setId(69155418L);
 		netbarService.fetchNetbarDetailInfos(netbar);
+	}
+
+	@Autowired
+	private QueryDao queryDao;
+
+	public long count() {
+		return netbarDao.count();
+	}
+
+	public List<Map<String, Object>> queryLimit(int start, int end) {
+
+		return queryDao.queryMap("select id from netbar order by id  limit " + start + "," + end);
+
+	}
+
+	public Netbar findById(long id) {
+		return netbarDao.findOne(id);
 	}
 }

@@ -20,24 +20,24 @@ public class Netbar extends BaseEntity {
 	private String dpUrl;
 	private String streetName;
 	private Long cid;
-	private double qqLon;
-	private double qqLat;
+	private Double qqLon;
+	private Double qqLat;
 
 	@Column(name = "qq_lon")
-	public double getQqLon() {
+	public Double getQqLon() {
 		return qqLon;
 	}
 
-	public void setQqLon(double qqLon) {
+	public void setQqLon(Double qqLon) {
 		this.qqLon = qqLon;
 	}
 
 	@Column(name = "qq_lat")
-	public double getQqLat() {
+	public Double getQqLat() {
 		return qqLat;
 	}
 
-	public void setQqLat(double qqLat) {
+	public void setQqLat(Double qqLat) {
 		this.qqLat = qqLat;
 	}
 

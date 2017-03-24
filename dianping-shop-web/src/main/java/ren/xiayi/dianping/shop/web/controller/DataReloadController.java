@@ -3,6 +3,7 @@ package ren.xiayi.dianping.shop.web.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import ren.xiayi.dianping.shop.entity.JsonResponseMsg;
+import ren.xiayi.dianping.shop.entity.Netbar;
 import ren.xiayi.dianping.shop.service.AreaService;
 import ren.xiayi.dianping.shop.service.CategoryService;
 import ren.xiayi.dianping.shop.service.CityService;
@@ -80,6 +82,39 @@ public class DataReloadController extends BaseController {
 				}
 			}
 			logger.error("end------------------------------------- is [" + cid + "," + id + "," + "rank" + "]");
+		}
+		res.fill(0, "success");
+		return res;
+	}
+
+	@RequestMapping(value = "netbarDetail")
+	@ResponseBody
+	public JsonResponseMsg netbarDetail() {
+		JsonResponseMsg res = new JsonResponseMsg();
+		long count = netbarService.count();
+		long maxPage = count / 50;
+		for (int i = 0; i < maxPage; i++) {
+			try {
+				Thread.sleep(RandomUtils.nextInt(1000) + 500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			int start = i * 50;
+			int end = (i + 1) * 50;
+			List<Map<String, Object>> netbars = netbarService.queryLimit(start, end);
+			for (Map<String, Object> area : netbars) {
+				long id = NumberUtils.toLong(area.get("id").toString());
+				Netbar netbar = netbarService.findById(id);
+				netbarService.fetchNetbarDetailInfos(netbar);
+				logger.error("update---------------------------------- is [" + id + "]");
+				try {
+					Thread.sleep(RandomUtils.nextInt(500) + 500);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			logger.error("finished---------------------------------- page [" + i + "]");
 		}
 		res.fill(0, "success");
 		return res;
