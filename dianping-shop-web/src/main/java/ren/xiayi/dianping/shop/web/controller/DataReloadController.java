@@ -110,7 +110,6 @@ public class DataReloadController extends BaseController {
 				try {
 					Thread.sleep(RandomUtils.nextInt(500) + 500);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

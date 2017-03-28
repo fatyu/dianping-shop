@@ -10,6 +10,7 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpEntity;
@@ -127,55 +128,56 @@ public class NetbarService {
 	 * @param shopId 网吧id
 	 */
 	public void fetchNetbarDetailInfos(Netbar netbar) {
-		int timeout = 1000;
+		int timeout = 5000;
 		String baseInfoUrl = "http://www.dianping.com/shop/" + netbar.getId();
 		Document doc;
 		try {
 			doc = Jsoup.connect(baseInfoUrl).timeout(timeout).get();//超时时间1s
 			Element basicInfo = doc.getElementById("basic-info");//获取基本信息
-			Elements score = basicInfo.getElementsByClass("mid-rank-stars");//评分
+			if (basicInfo != null) {
+				Elements score = basicInfo.getElementsByClass("mid-rank-stars");//评分
 
-			String avgScore = score.get(0).attr("title");//分数
-			double avgScoreVal = 0;
-			//该商户暂无星级
-			if (StringUtils.contains(avgScore, "暂无")) {
-				avgScoreVal = 0;
-			} else if (StringUtils.contains(avgScore, "准四")) {
-				avgScoreVal = 3.5;
-			} else if (StringUtils.contains(avgScore, "准三")) {
-				avgScoreVal = 2.5;
-			} else if (StringUtils.contains(avgScore, "准二")) {
-				avgScoreVal = 1.5;
-			} else if (StringUtils.contains(avgScore, "准一")) {
-				avgScoreVal = 0.5;
-			} else if (StringUtils.contains(avgScore, "准五")) {
-				avgScoreVal = 4.5;
-			} else if (StringUtils.contains(avgScore, "五")) {
-				avgScoreVal = 5;
-			} else if (StringUtils.contains(avgScore, "四")) {
-				avgScoreVal = 4;
-			} else if (StringUtils.contains(avgScore, "三")) {
-				avgScoreVal = 3;
-			} else if (StringUtils.contains(avgScore, "二")) {
-				avgScoreVal = 2;
-			} else if (StringUtils.contains(avgScore, "一")) {
-				avgScoreVal = 1;
+				String avgScore = score.get(0).attr("title");//分数
+				double avgScoreVal = 0;
+				//该商户暂无星级
+				if (StringUtils.contains(avgScore, "暂无")) {
+					avgScoreVal = 0;
+				} else if (StringUtils.contains(avgScore, "准四")) {
+					avgScoreVal = 3.5;
+				} else if (StringUtils.contains(avgScore, "准三")) {
+					avgScoreVal = 2.5;
+				} else if (StringUtils.contains(avgScore, "准二")) {
+					avgScoreVal = 1.5;
+				} else if (StringUtils.contains(avgScore, "准一")) {
+					avgScoreVal = 0.5;
+				} else if (StringUtils.contains(avgScore, "准五")) {
+					avgScoreVal = 4.5;
+				} else if (StringUtils.contains(avgScore, "五")) {
+					avgScoreVal = 5;
+				} else if (StringUtils.contains(avgScore, "四")) {
+					avgScoreVal = 4;
+				} else if (StringUtils.contains(avgScore, "三")) {
+					avgScoreVal = 3;
+				} else if (StringUtils.contains(avgScore, "二")) {
+					avgScoreVal = 2;
+				} else if (StringUtils.contains(avgScore, "一")) {
+					avgScoreVal = 1;
+				}
+				String commentCount = basicInfo.getElementById("reviewCount").text();//回复评论数量
+				String avgCost = basicInfo.getElementById("avgPriceTitle").text();//人均价格
+				String address = basicInfo.getElementsByClass("expand-info address").get(0).getElementsByClass("item")
+						.get(0).attr("title");
+				String telephone = "";
+				Elements tels = basicInfo.getElementsByClass("expand-info tel").get(0).getElementsByClass("item");
+				for (Element element : tels) {
+					telephone = telephone + " " + element.text();
+				}
+				netbar.setAddress(address);
+				netbar.setPhone(telephone);
+				netbar.setScore(avgScoreVal);
+				netbar.setCommentCount(NumberUtils.toInt(StringUtils.substringBefore(commentCount, "条")));
+				netbar.setAvgCost(NumberUtils.toInt(StringUtils.substringBetween(avgCost, "：", "元")));
 			}
-			String commentCount = basicInfo.getElementById("reviewCount").text();//回复评论数量
-			String avgCost = basicInfo.getElementById("avgPriceTitle").text();//人均价格
-			String address = basicInfo.getElementsByClass("expand-info address").get(0).getElementsByClass("item")
-					.get(0).attr("title");
-			String telephone = "";
-			Elements tels = basicInfo.getElementsByClass("expand-info tel").get(0).getElementsByClass("item");
-			for (Element element : tels) {
-				telephone = telephone + " " + element.text();
-			}
-			netbar.setAddress(address);
-			netbar.setPhone(telephone);
-			netbar.setScore(avgScoreVal);
-			netbar.setCommentCount(NumberUtils.toInt(StringUtils.substringBefore(commentCount, "条")));
-			netbar.setAvgCost(NumberUtils.toInt(StringUtils.substringBetween(avgCost, "：", "元")));
-
 			String html = doc.html();
 			String lat = StringUtils.substringBetween(html, "shopGlat: \"", "\",");
 			String lon = StringUtils.substringBetween(html, "shopGlng:\"", "\",");
@@ -272,16 +274,18 @@ public class NetbarService {
 		String json = getCommentJson(client, shopId);
 		Map<String, Object> map = JsonUtils.stringToObject(json, Map.class);
 		Map<String, Object> msg = (Map<String, Object>) map.get("msg");
-		List<Map<String, Object>> imgs = (List<Map<String, Object>>) msg.get("img");
-		for (Map<String, Object> i : imgs) {
-			String imgUrl = i.get("full").toString();
-			Long imgId = NumberUtils.toLong(StringUtils.substringAfterLast(i.get("href").toString(), "/"));
-			System.out.println(imgId + "-------->" + imgUrl);
-			Img img = new Img();
-			img.setId(imgId);
-			img.setNid(shopId);
-			img.setUrl(imgUrl);
-			imgService.save(img);
+		if (MapUtils.isNotEmpty(msg)) {
+			List<Map<String, Object>> imgs = (List<Map<String, Object>>) msg.get("img");
+			for (Map<String, Object> i : imgs) {
+				String imgUrl = i.get("full").toString();
+				Long imgId = NumberUtils.toLong(StringUtils.substringAfterLast(i.get("href").toString(), "/"));
+				System.out.println(imgId + "-------->" + imgUrl);
+				Img img = new Img();
+				img.setId(imgId);
+				img.setNid(shopId);
+				img.setUrl(imgUrl);
+				imgService.save(img);
+			}
 		}
 	}
 

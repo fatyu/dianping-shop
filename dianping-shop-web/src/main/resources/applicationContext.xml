@@ -70,8 +70,8 @@
 		<property name="password" value="${jdbc.password}" />
 		<property name="filters" value="stat" />
 		<property name="connectionProperties" value="druid.stat.slowSqlMillis=5000" />
-		<property name="removeAbandoned" value="true" /> <!-- 打开removeAbandoned功能 -->
-		<property name="removeAbandonedTimeout" value="180" /> <!-- 180秒-->
+<!-- 		<property name="removeAbandoned" value="true" /> 打开removeAbandoned功能 -->
+<!-- 		<property name="removeAbandonedTimeout" value="180" /> 180秒 -->
 		<property name="logAbandoned" value="true" /> <!-- 关闭abanded连接时输出错误日志 -->
 		<property name="maxActive" value="100" />
 		<property name="initialSize" value="10" />
