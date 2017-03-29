@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,33 +90,65 @@ public class DataReloadController extends BaseController {
 
 	@RequestMapping(value = "netbarDetail")
 	@ResponseBody
-	public JsonResponseMsg netbarDetail() {
+	public JsonResponseMsg netbarDetail(int s) {
 		JsonResponseMsg res = new JsonResponseMsg();
 		long count = netbarService.count();
 		long maxPage = count / 50;
-		for (int i = 0; i < maxPage; i++) {
-			try {
-				Thread.sleep(RandomUtils.nextInt(1000) + 500);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		for (int i = s; i < maxPage; i++) {
+			System.out.println(
+					"|||||||||||||||||||||||||||||||||||||||||||||||||||||>>>>>>>>>>>>>>>>>>>>>>>>>>>>current page is :"
+							+ i);
 			int start = i * 50;
-			int end = (i + 1) * 50;
+			int end = 50;
 			List<Map<String, Object>> netbars = netbarService.queryLimit(start, end);
 			for (Map<String, Object> area : netbars) {
 				long id = NumberUtils.toLong(area.get("id").toString());
 				Netbar netbar = netbarService.findById(id);
-				netbarService.fetchNetbarDetailInfos(netbar);
-				logger.error("update---------------------------------- is [" + id + "]");
-				try {
-					Thread.sleep(RandomUtils.nextInt(500) + 500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				if (StringUtils.isBlank(netbar.getAddress())) {
+					netbarService.fetchNetbarDetailInfos(netbar);
+					logger.error("update---------------------------------- is [" + id + "]");
+					try {
+						Thread.sleep(RandomUtils.nextInt(500) + 200);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			logger.error("finished---------------------------------- page [" + i + "]");
 		}
 		res.fill(0, "success");
+		logger.error(">>>>>>>>>>>>>>>>>all netbar update detail info finished---------------------------------]");
+		return res;
+	}
+
+	@RequestMapping(value = "netbarComments")
+	@ResponseBody
+	public JsonResponseMsg netbarComment(int s) {
+		JsonResponseMsg res = new JsonResponseMsg();
+		long count = netbarService.count();
+		long maxPage = count / 50;
+		for (int i = s; i < maxPage; i++) {
+			System.out.println("current page is :" + i);
+			int start = i * 50;
+			int end = 50;
+			List<Map<String, Object>> netbars = netbarService.queryLimit(start, end);
+			for (Map<String, Object> area : netbars) {
+				long id = NumberUtils.toLong(area.get("id").toString());
+				Netbar netbar = netbarService.findById(id);
+				if (StringUtils.isBlank(netbar.getAddress())) {
+					netbarService.fetchNetbarComments(netbar, 1);
+					logger.error("fetch netbar [" + id + "] comment finished!");
+					try {
+						Thread.sleep(RandomUtils.nextInt(500) + 200);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			logger.error("finished comment fetch ---------------------------------- page [" + i + "]");
+		}
+		res.fill(0, "success");
+		logger.error(">>>>>>>>>>>>>>>>>all netbar comment info finished---------------------------------]");
 		return res;
 	}
 

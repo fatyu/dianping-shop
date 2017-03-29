@@ -5,12 +5,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.net.Authenticator;
+import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpEntity;
@@ -23,6 +31,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.Args;
 import org.apache.http.util.CharArrayBuffer;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -35,6 +44,7 @@ import com.google.common.collect.Lists;
 
 import ren.xiayi.dianping.shop.dao.NetbarDao;
 import ren.xiayi.dianping.shop.dao.QueryDao;
+import ren.xiayi.dianping.shop.entity.Comment;
 import ren.xiayi.dianping.shop.entity.Img;
 import ren.xiayi.dianping.shop.entity.Netbar;
 import ren.xiayi.dianping.shop.utils.HttpConnectionUtil;
@@ -50,7 +60,8 @@ public class NetbarService {
 	private Logger logger = org.slf4j.LoggerFactory.getLogger(NetbarService.class);
 	@Autowired
 	private NetbarDao netbarDao;
-
+	@Autowired
+	private CommentService commentService;
 	@Autowired
 	private ImgService imgService;
 
@@ -128,13 +139,25 @@ public class NetbarService {
 	 * @param shopId 网吧id
 	 */
 	public void fetchNetbarDetailInfos(Netbar netbar) {
-		int timeout = 5000;
+		int timeout = 8000;
 		String baseInfoUrl = "http://www.dianping.com/shop/" + netbar.getId();
 		Document doc;
 		try {
-			doc = Jsoup.connect(baseInfoUrl).timeout(timeout).get();//超时时间1s
+			Connection connect = Jsoup.connect(baseInfoUrl);
+			Map<String, String> header = new HashMap<String, String>();
+			header.put("Host", "http://www.dianping.com");
+			header.put("User-Agent",
+					"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.110 Safari/537.36");
+			header.put("Accept", "	text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+			header.put("Accept-Language", "zh-cn,zh;q=0.5");
+			header.put("Accept-Charset", "en,zh-CN;q=0.8,zh;q=0.6");
+			header.put("Connection", "keep-alive");
+			connect = connect.data(header);
+			connect.proxy(getProxy());
+			doc = connect.timeout(timeout).get();//超时时间1s
 			Element basicInfo = doc.getElementById("basic-info");//获取基本信息
 			if (basicInfo != null) {
+				logger.error("netbar detail info html is :" + basicInfo.html());
 				Elements score = basicInfo.getElementsByClass("mid-rank-stars");//评分
 
 				String avgScore = score.get(0).attr("title");//分数
@@ -200,9 +223,12 @@ public class NetbarService {
 
 			this.save(netbar);//保存网吧数据
 			fetchNetbarImgs(netbar);
-			fetchNetbarComments(netbar);
+			//			fetchNetbarComments(netbar, 1);
 
 		} catch (Exception e) {
+			logger.error(
+					"||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||>>>>>>>>>>>>>>>>>>>>>>>>抓取网吧{}信息异常",
+					netbar.getId());
 			e.printStackTrace();
 		} finally {
 		}
@@ -269,32 +295,40 @@ public class NetbarService {
 	 */
 	@SuppressWarnings("unchecked")
 	public void fetchNetbarImgs(Netbar netbar) {
+		try {
+			Thread.sleep(RandomUtils.nextInt(500));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		CloseableHttpClient client = HttpConnectionUtil.getHttpClient();
 		Long shopId = netbar.getId();
-		String json = getCommentJson(client, shopId);
-		Map<String, Object> map = JsonUtils.stringToObject(json, Map.class);
-		Map<String, Object> msg = (Map<String, Object>) map.get("msg");
-		if (MapUtils.isNotEmpty(msg)) {
-			List<Map<String, Object>> imgs = (List<Map<String, Object>>) msg.get("img");
-			for (Map<String, Object> i : imgs) {
-				String imgUrl = i.get("full").toString();
-				Long imgId = NumberUtils.toLong(StringUtils.substringAfterLast(i.get("href").toString(), "/"));
-				System.out.println(imgId + "-------->" + imgUrl);
-				Img img = new Img();
-				img.setId(imgId);
-				img.setNid(shopId);
-				img.setUrl(imgUrl);
-				imgService.save(img);
+		String json = getNetbarImgJson(client, shopId);
+		logger.error("netbar detail info imgs is :" + json);
+		if (StringUtils.isNotBlank(json)) {
+			Map<String, Object> map = JsonUtils.stringToObject(json, Map.class);
+			Map<String, Object> msg = (Map<String, Object>) map.get("msg");
+			if (MapUtils.isNotEmpty(msg)) {
+				List<Map<String, Object>> imgs = (List<Map<String, Object>>) msg.get("img");
+				for (Map<String, Object> i : imgs) {
+					String imgUrl = i.get("full").toString();
+					Long imgId = NumberUtils.toLong(StringUtils.substringAfterLast(i.get("href").toString(), "/"));
+					//System.out.println(imgId + "-------->" + imgUrl);
+					Img img = new Img();
+					img.setId(imgId);
+					img.setNid(shopId);
+					img.setUrl(imgUrl);
+					imgService.save(img);
+				}
 			}
 		}
 	}
 
 	/**
-	 * 获取评论json数据
+	 * 获取网吧图片信息
 	 * @param httpclient
 	 * @return json字符串
 	 */
-	private String getCommentJson(CloseableHttpClient client, long shopId) {
+	private String getNetbarImgJson(CloseableHttpClient client, long shopId) {
 		HttpGet get = new HttpGet("http://www.dianping.com/ajax/json/shoppic/find?type=all_new&shopId=" + shopId
 				+ "&firstPos=0&count=100");
 		CloseableHttpResponse execute = null;
@@ -370,17 +404,51 @@ public class NetbarService {
 	 * 20 一页,判断获取的数据量是不是等于20,如果是的,加载下一页
 	 * @param netbar
 	 */
-	public void fetchNetbarComments(Netbar netbar) {
-		//		int timeout = 1000;
-		//		String baseInfoUrl = "http://www.dianping.com/shop/" + netbar.getId() + "/review_more?pageno=1";
-		//		Document doc;
-		//		try {
-		//			doc = Jsoup.connect(baseInfoUrl).timeout(timeout).get();//超时时间1s
-		//			Element basicInfo = doc.getElementById("basic-info");//获取基本信息
-		//			Element map = doc.getElementById("map");//获取经纬度;
-		//		} catch (Exception e) {
-		//			e.printStackTrace();
-		//		}
+	public void fetchNetbarComments(Netbar netbar, int page) {
+		int timeout = 1000;
+		String baseInfoUrl = "http://www.dianping.com/shop/" + netbar.getId() + "/review_more?pageno=" + page;
+		Document doc;
+		try {
+			doc = Jsoup.connect(baseInfoUrl).timeout(timeout).get();//超时时间1s
+			Elements lists = doc.getElementsByClass("comment-list");
+			if (CollectionUtils.isNotEmpty(lists)) {
+
+				Element commentContainer = lists.get(0);
+				Elements comments = commentContainer.getElementsByTag("li");
+				if (CollectionUtils.isNotEmpty(comments)) {
+
+					for (Element e : comments) {
+						Comment comment = new Comment();
+						Elements elementsId = e.getElementsByAttribute("data-id");
+						long eId = NumberUtils.toLong(elementsId.get(0).html());
+						comment.setId(eId);
+						Elements userInfo = e.getElementsByClass("user-info");
+						if (CollectionUtils.isNotEmpty(userInfo)) {
+							String[] score = StringUtils.substringsBetween(userInfo.get(0).html(),
+									"item-rank-rst irr-star", "\"");
+							if (ArrayUtils.isNotEmpty(score)) {
+								double commentScore = NumberUtils.toInt(score[0]) / 10;
+								comment.setScore(commentScore);
+							}
+						}
+						Elements contentContainer = e.getElementsByClass("J_brief-cont");
+						if (CollectionUtils.isNotEmpty(contentContainer)) {
+							Element content = contentContainer.get(0);
+							String userContent = content.html();
+							comment.setComment(userContent);
+						}
+						commentService.save(comment);
+
+					}
+
+					if (comments.size() == 20) {
+						fetchNetbarComments(netbar, page++);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void main(String[] args) {
@@ -398,12 +466,30 @@ public class NetbarService {
 	}
 
 	public List<Map<String, Object>> queryLimit(int start, int end) {
-
 		return queryDao.queryMap("select id from netbar order by id  limit " + start + "," + end);
-
 	}
 
 	public Netbar findById(long id) {
 		return netbarDao.findOne(id);
+	}
+
+	// 代理隧道验证信息
+	final static String ProxyUser = "H3Q4VF69PG1L4G2D";
+	final static String ProxyPass = "495F09979E5D2961";
+
+	// 代理服务器
+	final static String ProxyHost = "proxy.abuyun.com";
+	final static Integer ProxyPort = 9020;
+
+	public static Proxy getProxy() {
+		Authenticator.setDefault(new Authenticator() {
+			@Override
+			public PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(ProxyUser, ProxyPass.toCharArray());
+			}
+		});
+
+		Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ProxyHost, ProxyPort));
+		return proxy;
 	}
 }
