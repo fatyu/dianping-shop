@@ -19,7 +19,7 @@ public class HttpConnectionUtil {
 	public final static int WAIT_TIMEOUT = 60000;
 	public final static int MAX_ROUTE_CONNECTIONS = 500;
 	public final static int CONNECT_TIMEOUT = 1000;
-	public final static int READ_TIMEOUT = 3000;
+	public final static int READ_TIMEOUT = 1000;
 
 	private static SocketConfig socketConfig;
 	private static HttpClientConnectionManager connectionManager;
@@ -28,7 +28,7 @@ public class HttpConnectionUtil {
 	static {
 		Builder customBuilder = SocketConfig.custom();
 		customBuilder.setSoKeepAlive(true);
-		customBuilder.setSoTimeout(1000);
+		customBuilder.setSoTimeout(100);
 		customBuilder.setTcpNoDelay(true);
 		socketConfig = customBuilder.build();
 		poolConn = new PoolingHttpClientConnectionManager();

@@ -95,9 +95,7 @@ public class DataReloadController extends BaseController {
 		long count = netbarService.count();
 		long maxPage = count / 50;
 		for (int i = s; i < maxPage; i++) {
-			System.out.println(
-					"|||||||||||||||||||||||||||||||||||||||||||||||||||||>>>>>>>>>>>>>>>>>>>>>>>>>>>>current page is :"
-							+ i);
+			System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>current page is :" + i);
 			int start = i * 50;
 			int end = 50;
 			List<Map<String, Object>> netbars = netbarService.queryLimit(start, end);
@@ -106,9 +104,9 @@ public class DataReloadController extends BaseController {
 				Netbar netbar = netbarService.findById(id);
 				if (StringUtils.isBlank(netbar.getAddress())) {
 					netbarService.fetchNetbarDetailInfos(netbar);
-					logger.error("update---------------------------------- is [" + id + "]");
+					//					logger.error("update---------------------------------- is [" + id + "]");
 					try {
-						Thread.sleep(RandomUtils.nextInt(500) + 200);
+						Thread.sleep(1000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}

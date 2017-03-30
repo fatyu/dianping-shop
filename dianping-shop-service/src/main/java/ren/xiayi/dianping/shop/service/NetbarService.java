@@ -17,7 +17,6 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -139,7 +138,7 @@ public class NetbarService {
 	 * @param shopId 网吧id
 	 */
 	public void fetchNetbarDetailInfos(Netbar netbar) {
-		int timeout = 8000;
+		int timeout = 3000;
 		String baseInfoUrl = "http://www.dianping.com/shop/" + netbar.getId();
 		Document doc;
 		try {
@@ -157,7 +156,7 @@ public class NetbarService {
 			doc = connect.timeout(timeout).get();//超时时间1s
 			Element basicInfo = doc.getElementById("basic-info");//获取基本信息
 			if (basicInfo != null) {
-				logger.error("netbar detail info html is :" + basicInfo.html());
+				//logger.error("netbar detail info html is :" + basicInfo.html());
 				Elements score = basicInfo.getElementsByClass("mid-rank-stars");//评分
 
 				String avgScore = score.get(0).attr("title");//分数
@@ -222,14 +221,12 @@ public class NetbarService {
 			}
 
 			this.save(netbar);//保存网吧数据
-			fetchNetbarImgs(netbar);
+			//fetchNetbarImgs(netbar);
 			//			fetchNetbarComments(netbar, 1);
-
+			logger.error(">>>>>>>>>>>>>>>>>>>>抓取网吧{}信息完成", netbar.getId());
 		} catch (Exception e) {
-			logger.error(
-					"||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||>>>>>>>>>>>>>>>>>>>>>>>>抓取网吧{}信息异常",
-					netbar.getId());
-			e.printStackTrace();
+			logger.error("|||||||||||||||||||||||||||抓取网吧{}信息异常:{}", netbar.getId(), e.getMessage());
+			//			e.printStackTrace();
 		} finally {
 		}
 	}
@@ -295,11 +292,6 @@ public class NetbarService {
 	 */
 	@SuppressWarnings("unchecked")
 	public void fetchNetbarImgs(Netbar netbar) {
-		try {
-			Thread.sleep(RandomUtils.nextInt(500));
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 		CloseableHttpClient client = HttpConnectionUtil.getHttpClient();
 		Long shopId = netbar.getId();
 		String json = getNetbarImgJson(client, shopId);
