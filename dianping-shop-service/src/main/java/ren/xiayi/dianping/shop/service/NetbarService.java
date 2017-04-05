@@ -304,7 +304,7 @@ public class NetbarService {
 				for (Map<String, Object> i : imgs) {
 					String imgUrl = i.get("full").toString();
 					Long imgId = NumberUtils.toLong(StringUtils.substringAfterLast(i.get("href").toString(), "/"));
-					//System.out.println(imgId + "-------->" + imgUrl);
+					logger.info("fetch img>" + imgId + "-------->" + imgUrl);
 					Img img = new Img();
 					img.setId(imgId);
 					img.setNid(shopId);
@@ -457,6 +457,14 @@ public class NetbarService {
 		return netbarDao.count();
 	}
 
+	public long count(boolean unUpdate) {
+		if (unUpdate) {
+			Number count = queryDao.query("select count(1) from netbar where address is null");
+			return count.longValue();
+		}
+		return netbarDao.count();
+	}
+
 	public List<Map<String, Object>> queryLimit(int start, int end) {
 		return queryDao.queryMap("select id from netbar order by id  limit " + start + "," + end);
 	}
@@ -483,5 +491,13 @@ public class NetbarService {
 
 		Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ProxyHost, ProxyPort));
 		return proxy;
+	}
+
+	public List<Map<String, Object>> queryLimitByAddressIsNull(int start, int end) {
+		return queryDao.queryMap("select id from netbar where address is null order by id  limit " + start + "," + end);
+	}
+
+	public List<Map<String, Object>> queryLimitByGeo(int start, int end) {
+		return queryDao.queryMap("select id from netbar where address is null order by id  limit " + start + "," + end);
 	}
 }

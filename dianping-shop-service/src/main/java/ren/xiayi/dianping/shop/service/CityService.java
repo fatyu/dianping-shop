@@ -19,6 +19,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.Args;
 import org.apache.http.util.CharArrayBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +39,8 @@ import ren.xiayi.dianping.shop.utils.HttpConnectionUtil;
  */
 @Component
 public class CityService {
+
+	private static final Logger logger = LoggerFactory.getLogger(CityService.class);
 	@Autowired
 	private CityDao cityDao;
 
@@ -63,7 +67,7 @@ public class CityService {
 		List<City> citys = (List<City>) xStream.fromXML(xml);
 		for (City city : citys) {
 			this.save(city);
-			System.out.println(city.getName() + "|" + city.getEnname() + "|" + city.getId());
+			logger.info(city.getName() + "|" + city.getEnname() + "|" + city.getId());
 		}
 	}
 

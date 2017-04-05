@@ -10,7 +10,7 @@ import javax.persistence.Query;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.hibernate.SQLQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.transform.Transformers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,11 +83,11 @@ public class QueryDao {
 	/**
 	 * 查询无参sql对应的单一Map结果集
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	public Map<String, Object> querySingleMap(String sql) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		Query query = em.createNativeQuery(sql);
-		query.unwrap(SQLQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		query.unwrap(NativeQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
 		List<Map<String, Object>> resultList = null;
 		try {
 			resultList = query.getResultList();
@@ -106,11 +106,11 @@ public class QueryDao {
 	/**
 	 * 查询有参数sql对应的单一Map结果集
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	public Map<String, Object> querySingleMap(String sql, Map<String, Object> params) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		Query query = em.createNativeQuery(sql);
-		query.unwrap(SQLQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		query.unwrap(NativeQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
 		fillParams(query, params);
 		List<Map<String, Object>> resultList = null;
 		try {
@@ -130,11 +130,11 @@ public class QueryDao {
 	/**
 	 * 查询sql对应的Map结果集
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked", "rawtypes", "deprecation" })
 	public List<Map<String, Object>> queryMap(String sql) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		Query query = em.createNativeQuery(sql);
-		query.unwrap(SQLQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		query.unwrap(NativeQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
 		List resultList = null;
 		try {
 			resultList = query.getResultList();
@@ -149,11 +149,11 @@ public class QueryDao {
 	/**
 	 * 查询sql对应的Map结果集
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked", "rawtypes", "deprecation" })
 	public List<Map<String, Object>> queryMap(String sql, Map<String, Object> params) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		Query query = em.createNativeQuery(sql);
-		query.unwrap(SQLQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		query.unwrap(NativeQuery.class).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
 		fillParams(query, params);
 		List resultList = null;
 		try {

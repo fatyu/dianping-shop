@@ -21,6 +21,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.Args;
 import org.apache.http.util.CharArrayBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +41,8 @@ import ren.xiayi.dianping.shop.utils.JsonUtils;
  */
 @Component
 public class AreaService {
+
+	private static final Logger logger = LoggerFactory.getLogger(CityService.class);
 	@Autowired
 	private AreaDao areaDao;
 	@Autowired
@@ -80,7 +84,7 @@ public class AreaService {
 		List<Map<String, Object>> areas = (List<Map<String, Object>>) msg.get("regionids");
 		int i = 0;
 		for (Map<String, Object> area : areas) {
-			System.out.println("process:  " + cname + "总计" + areas.size() + "个区,准备更新第 " + i + "个区数据");
+			logger.info("process:  " + cname + "总计" + areas.size() + "个区,准备更新第 " + i + "个区数据");
 			String name = area.get("name").toString();
 			Long id = NumberUtils.toLong(area.get("key").toString());
 			Area a = new Area(id, name);
@@ -92,7 +96,7 @@ public class AreaService {
 				Street s = new Street(sId, street.get("name").toString(), id);
 				streetService.save(s);
 			}
-			System.out.println("-------------------------------------------------------------------------------");
+			logger.info("-------------------------------------------------------------------------------");
 			i++;
 		}
 	}

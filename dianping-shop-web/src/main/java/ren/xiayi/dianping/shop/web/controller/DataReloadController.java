@@ -73,7 +73,7 @@ public class DataReloadController extends BaseController {
 		for (Map<String, Object> area : areas) {
 			long cid = NumberUtils.toLong(area.get("cid").toString());
 			long id = NumberUtils.toLong(area.get("id").toString());
-			logger.error("start------------------------------------- is [" + cid + "," + id + "," + "rank" + "]");
+			logger.info("start------------------------------------- is [" + cid + "," + id + "," + "rank" + "]");
 			for (int p = 1; p < 50; p++) {
 				boolean continue_ = netbarService.fetchNetbarInfos(id, 20042, "rank", cid, p);
 				if (continue_) {
@@ -82,7 +82,7 @@ public class DataReloadController extends BaseController {
 					break;
 				}
 			}
-			logger.error("end------------------------------------- is [" + cid + "," + id + "," + "rank" + "]");
+			logger.info("end------------------------------------- is [" + cid + "," + id + "," + "rank" + "]");
 		}
 		res.fill(0, "success");
 		return res;
@@ -95,7 +95,7 @@ public class DataReloadController extends BaseController {
 		long count = netbarService.count();
 		long maxPage = count / 50;
 		for (int i = s; i < maxPage; i++) {
-			System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>current page is :" + i);
+			logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>current page is :" + i);
 			int start = i * 50;
 			int end = 50;
 			List<Map<String, Object>> netbars = netbarService.queryLimit(start, end);
@@ -104,7 +104,7 @@ public class DataReloadController extends BaseController {
 				Netbar netbar = netbarService.findById(id);
 				if (StringUtils.isBlank(netbar.getAddress())) {
 					netbarService.fetchNetbarDetailInfos(netbar);
-					//					logger.error("update---------------------------------- is [" + id + "]");
+					logger.info("update---------------------------------- is [" + id + "]");
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
@@ -112,10 +112,78 @@ public class DataReloadController extends BaseController {
 					}
 				}
 			}
-			logger.error("finished---------------------------------- page [" + i + "]");
+			logger.info("finished---------------------------------- page [" + i + "]");
 		}
 		res.fill(0, "success");
-		logger.error(">>>>>>>>>>>>>>>>>all netbar update detail info finished---------------------------------]");
+		logger.info(">>>>>>>>>>>>>>>>>all netbar update detail info finished---------------------------------]");
+		return res;
+	}
+
+	@RequestMapping(value = "netbarDetailRefreshByAddressIsNull")
+	@ResponseBody
+	public JsonResponseMsg netbarDetailRefreshByAddressIsNull() {
+
+		JsonResponseMsg res = new JsonResponseMsg();
+		long count = netbarService.count(true);
+		long maxPage = count / 50;
+		for (int i = 0; i < maxPage; i++) {
+			logger.info(">netbarDetailRefreshByAddressIsNull>>>>>>>>>>>>>>>>>>>>>>>>>>>current page is :" + i);
+			int start = i * 50;
+			int end = 50;
+			List<Map<String, Object>> netbars = netbarService.queryLimitByAddressIsNull(start, end);
+			for (Map<String, Object> area : netbars) {
+				long id = NumberUtils.toLong(area.get("id").toString());
+				Netbar netbar = netbarService.findById(id);
+				if (StringUtils.isBlank(netbar.getAddress())) {
+					netbarService.fetchNetbarDetailInfos(netbar);
+					logger.info("update---------------------------------- is [" + id + "]");
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			logger.info(
+					"finished-netbarDetailRefreshByAddressIsNull--------------------------------- page [" + i + "]");
+		}
+		res.fill(0, "success");
+		logger.info(
+				">netbarDetailRefreshByAddressIsNull>>>>>>>>>>>>>>>>all netbar update detail info finished---------------------------------]");
+		return res;
+	}
+
+	@RequestMapping(value = "netbarDetailRefreshByGeo")
+	@ResponseBody
+	public JsonResponseMsg netbarDetailRefreshByGeo() {
+
+		JsonResponseMsg res = new JsonResponseMsg();
+		long count = netbarService.count(true);
+		long maxPage = count / 50;
+		for (int i = 0; i < maxPage; i++) {
+			logger.info(">netbarDetailRefreshByAddressIsNull>>>>>>>>>>>>>>>>>>>>>>>>>>>current page is :" + i);
+			int start = i * 50;
+			int end = 50;
+			List<Map<String, Object>> netbars = netbarService.queryLimitByGeo(start, end);
+			for (Map<String, Object> area : netbars) {
+				long id = NumberUtils.toLong(area.get("id").toString());
+				Netbar netbar = netbarService.findById(id);
+				if (StringUtils.isBlank(netbar.getAddress())) {
+					netbarService.fetchNetbarDetailInfos(netbar);
+					logger.info("update---------------------------------- is [" + id + "]");
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			logger.info(
+					"finished-netbarDetailRefreshByAddressIsNull--------------------------------- page [" + i + "]");
+		}
+		res.fill(0, "success");
+		logger.info(
+				">netbarDetailRefreshByAddressIsNull>>>>>>>>>>>>>>>>all netbar update detail info finished---------------------------------]");
 		return res;
 	}
 
@@ -126,7 +194,7 @@ public class DataReloadController extends BaseController {
 		long count = netbarService.count();
 		long maxPage = count / 50;
 		for (int i = s; i < maxPage; i++) {
-			System.out.println("current page is :" + i);
+			logger.info("netbarComments current page is :" + i);
 			int start = i * 50;
 			int end = 50;
 			List<Map<String, Object>> netbars = netbarService.queryLimit(start, end);
@@ -135,7 +203,7 @@ public class DataReloadController extends BaseController {
 				Netbar netbar = netbarService.findById(id);
 				if (StringUtils.isBlank(netbar.getAddress())) {
 					netbarService.fetchNetbarComments(netbar, 1);
-					logger.error("fetch netbar [" + id + "] comment finished!");
+					logger.info("fetch netbar [" + id + "] comment finished!");
 					try {
 						Thread.sleep(RandomUtils.nextInt(500) + 200);
 					} catch (InterruptedException e) {
@@ -143,10 +211,10 @@ public class DataReloadController extends BaseController {
 					}
 				}
 			}
-			logger.error("finished comment fetch ---------------------------------- page [" + i + "]");
+			logger.info("finished comment fetch ---------------------------------- page [" + i + "]");
 		}
 		res.fill(0, "success");
-		logger.error(">>>>>>>>>>>>>>>>>all netbar comment info finished---------------------------------]");
+		logger.info(">>>>>>>>>>>>>>>>>all netbar comment info finished---------------------------------]");
 		return res;
 	}
 
