@@ -237,14 +237,12 @@ public class DataReloadController extends BaseController {
 			for (Map<String, Object> area : netbars) {
 				long id = NumberUtils.toLong(area.get("id").toString());
 				Netbar netbar = netbarService.findById(id);
-				if (StringUtils.isBlank(netbar.getAddress())) {
-					netbarService.fetchNetbarComments(netbar, 1);
-					logger.info("fetch netbar [" + id + "] comment finished!");
-					try {
-						Thread.sleep(RandomUtils.nextInt(500) + 200);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+				netbarService.fetchNetbarComments(netbar, 1);
+				logger.info("fetch netbar [" + id + "] comment finished!");
+				try {
+					Thread.sleep(RandomUtils.nextInt(500) + 200);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
 			logger.info("finished comment fetch ---------------------------------- page [" + i + "]");

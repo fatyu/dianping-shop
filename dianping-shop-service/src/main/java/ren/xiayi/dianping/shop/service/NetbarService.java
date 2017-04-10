@@ -418,11 +418,23 @@ public class NetbarService {
 	 * @param netbar
 	 */
 	public void fetchNetbarComments(Netbar netbar, int page) {
-		int timeout = 1000;
+		int timeout = 3000;
 		String baseInfoUrl = "http://www.dianping.com/shop/" + netbar.getId() + "/review_more?pageno=" + page;
 		Document doc;
 		try {
-			doc = Jsoup.connect(baseInfoUrl).timeout(timeout).get();//超时时间1s
+			Connection connect = Jsoup.connect(baseInfoUrl);
+			Map<String, String> header = new HashMap<String, String>();
+			header.put("Host", "http://www.dianping.com");
+			header.put("User-Agent",
+					"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.110 Safari/537.36");
+			header.put("Accept", "	text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+			header.put("Accept-Language", "zh-cn,zh;q=0.5");
+			header.put("Accept-Charset", "en,zh-CN;q=0.8,zh;q=0.6");
+			header.put("Connection", "keep-alive");
+			connect = connect.data(header);
+			connect.proxy(getProxy());
+			doc = connect.timeout(timeout).get();//超时时间1s
+			//			logger.info("load comment data>>>>>>>>>>>>>>>>>>>>" + doc.html());
 			Elements lists = doc.getElementsByClass("comment-list");
 			if (CollectionUtils.isNotEmpty(lists)) {
 
@@ -432,8 +444,7 @@ public class NetbarService {
 
 					for (Element e : comments) {
 						Comment comment = new Comment();
-						Elements elementsId = e.getElementsByAttribute("data-id");
-						long eId = NumberUtils.toLong(elementsId.get(0).html());
+						long eId = NumberUtils.toLong(e.attr("data-id"));
 						comment.setId(eId);
 						Elements userInfo = e.getElementsByClass("user-info");
 						if (CollectionUtils.isNotEmpty(userInfo)) {
@@ -450,6 +461,7 @@ public class NetbarService {
 							String userContent = content.html();
 							comment.setComment(userContent);
 						}
+						comment.setNid(netbar.getId());
 						commentService.save(comment);
 
 					}
