@@ -472,7 +472,8 @@ public class NetbarService {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("fetch comments error >>>>>>>>>>>>>>>>>>>>>>:" + e.getMessage());
+			//			e.printStackTrace();
 		}
 	}
 
