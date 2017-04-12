@@ -252,4 +252,33 @@ public class DataReloadController extends BaseController {
 		return res;
 	}
 
+	@RequestMapping(value = "netbarCommentsFix")
+	@ResponseBody
+	public JsonResponseMsg netbarCommentFix() {
+		JsonResponseMsg res = new JsonResponseMsg();
+		long count = netbarService.countHasCommentNetbar();
+		long maxPage = count / 50;
+		for (int i = 0; i < maxPage; i++) {
+			logger.info("netbarComments current page is :" + i);
+			int start = i * 50;
+			int end = 50;
+			List<Map<String, Object>> netbars = netbarService.queryHasCommentLimit(start, end);
+			for (Map<String, Object> area : netbars) {
+				long id = NumberUtils.toLong(area.get("id").toString());
+				Netbar netbar = netbarService.findById(id);
+				netbarService.fetchNetbarComments(netbar, 1);
+				logger.info("fetch netbar [" + id + "] comment finished!");
+				try {
+					Thread.sleep(RandomUtils.nextInt(500) + 200);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			logger.info("finished comment fetch ---------------------------------- page [" + i + "]");
+		}
+		res.fill(0, "success");
+		logger.info(">>>>>>>>>>>>>>>>>all netbar comment info finished---------------------------------]");
+		return res;
+	}
+
 }

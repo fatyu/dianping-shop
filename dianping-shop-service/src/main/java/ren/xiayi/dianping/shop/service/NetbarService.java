@@ -546,4 +546,16 @@ public class NetbarService {
 				.queryMap("select id from netbar where  id not in (select distinct nid from img) order by id  limit "
 						+ start + "," + end);
 	}
+
+	public long countHasCommentNetbar() {
+		Number count = queryDao.query(
+				"select count(1) from netbar where id not in (select distinct nid from comment) and comment_count>0");
+		return count.longValue();
+	}
+
+	public List<Map<String, Object>> queryHasCommentLimit(int start, int end) {
+		return queryDao.queryMap(
+				"select id from netbar where id not in (select distinct nid from comment) and comment_count>0 order by id  limit "
+						+ start + "," + end);
+	}
 }
