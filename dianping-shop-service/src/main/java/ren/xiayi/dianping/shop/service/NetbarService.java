@@ -434,7 +434,7 @@ public class NetbarService {
 			connect = connect.data(header);
 			connect.proxy(getProxy());
 			doc = connect.timeout(timeout).get();//超时时间1s
-			//			logger.info("load comment data>>>>>>>>>>>>>>>>>>>>" + doc.html());
+			logger.info("load comment data>>>>>>>>>>>>>>>>>>>>" + doc.html());
 			Elements lists = doc.getElementsByClass("comment-list");
 			if (CollectionUtils.isNotEmpty(lists)) {
 
