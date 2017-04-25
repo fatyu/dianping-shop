@@ -243,8 +243,7 @@ public class NetbarService {
 	private double[] convert(String coords) {
 		//进行编码转换
 		//http://api.map.baidu.com/geoconv/v1/?coords=114.21892734521,29.57542977892&ak=cofuT2iu779FwXsa61jUpxEq4xGufR4s&output=json&from=3
-		CloseableHttpClient client = HttpConnectionUtil.getHttpClient();
-		String llJson = getLLJson(client, coords);
+		String llJson = getLLJson(HttpConnectionUtil.getDirectHttpClient(), coords);
 		Map<String, Object> map = JsonUtils.stringToObject(llJson, Map.class);
 		List<Map<String, Object>> lls = (List<Map<String, Object>>) map.get("result");
 		double[] ll = new double[2];
@@ -304,7 +303,7 @@ public class NetbarService {
 		if (useProxy) {
 			client = HttpConnectionUtil.getProxyHttpClient();
 		} else {
-			client = HttpConnectionUtil.getHttpClient();
+			client = HttpConnectionUtil.getDirectHttpClient();
 		}
 		Long shopId = netbar.getId();
 		String json = getNetbarImgJson(client, shopId);

@@ -1,26 +1,16 @@
 package ren.xiayi.dianping.shop.service;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
-import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.util.Args;
-import org.apache.http.util.CharArrayBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,13 +48,16 @@ public class AreaService {
 	}
 
 	public void reloadByCity(long cityId, String cityName) {
-		reloadAreaByCity(cityId, cityName);
+		reloadAreaAndStreetByCity(cityId, cityName);
 	}
 
+	/**
+	 * 根据城市获取城市下属区域数据
+	 */
 	public void reloadAllArea() {
 		Iterable<City> cities = cityService.findAll();
 		for (City city : cities) {
-			reloadAreaByCity(city.getId(), city.getName());
+			reloadAreaAndStreetByCity(city.getId(), city.getName());
 		}
 	}
 
@@ -76,9 +69,8 @@ public class AreaService {
 	 * @param cityName 城市名称
 	 */
 	@SuppressWarnings("unchecked")
-	private void reloadAreaByCity(long cid, String cname) {
-		CloseableHttpClient client = HttpConnectionUtil.getHttpClient();
-		String json = getJson(client, cid);
+	private void reloadAreaAndStreetByCity(long cid, String cname) {
+		String json = loadAreaAndStreetInfos(HttpConnectionUtil.getDirectHttpClient(), cid);
 		Map<String, Object> map = JsonUtils.stringToObject(json, Map.class);
 		Map<String, Object> msg = (Map<String, Object>) map.get("msg");
 		List<Map<String, Object>> areas = (List<Map<String, Object>>) msg.get("regionids");
@@ -102,17 +94,17 @@ public class AreaService {
 	}
 
 	/**
-	 * 获取点评的分类json数据
+	 * 获取指定城市下属地区(市和街道或者商区信息)json数据
 	 * @param httpclient
 	 * @return json字符串
 	 */
-	private String getJson(CloseableHttpClient client, long cid) {
+	private String loadAreaAndStreetInfos(CloseableHttpClient client, long cid) {
 		HttpGet get = new HttpGet("http://dpindex.dianping.com/ajax/regionlist?cityid=" + cid + "&shopids=");
 		CloseableHttpResponse execute = null;
 		try {
 			execute = client.execute(get);
 			HttpEntity entity = execute.getEntity();
-			String string = toString(entity, Charset.defaultCharset());
+			String string = HttpConnectionUtil.dataConvertToString(entity, Charset.defaultCharset());
 			if (null == entity) {
 				return null;
 			} else if (execute.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
@@ -135,48 +127,9 @@ public class AreaService {
 	}
 
 	/**
-	 * 获取http请求响应的内容
+	 * 获取所有的区域信息
+	 * @return
 	 */
-	private String toString(final HttpEntity entity, final Charset defaultCharset) throws IOException, ParseException {
-		final InputStream instream = entity.getContent();
-		if (instream == null) {
-			return null;
-		}
-		try {
-			Args.check(entity.getContentLength() <= Integer.MAX_VALUE,
-					"HTTP entity too large to be buffered in memory");
-			int i = (int) entity.getContentLength();
-			if (i < 0) {
-				i = 4096;
-			}
-			Charset charset = null;
-			try {
-				final ContentType contentType = ContentType.get(entity);
-				if (contentType != null) {
-					charset = contentType.getCharset();
-				}
-			} catch (final UnsupportedCharsetException ex) {
-				throw new UnsupportedEncodingException(ex.getMessage());
-			}
-			if (charset == null) {
-				charset = defaultCharset;
-			}
-			if (charset == null) {
-				charset = HTTP.DEF_CONTENT_CHARSET;
-			}
-			final Reader reader = new InputStreamReader(instream, charset);
-			final CharArrayBuffer buffer = new CharArrayBuffer(i);
-			final char[] tmp = new char[1024];
-			int l;
-			while ((l = reader.read(tmp)) != -1) {
-				buffer.append(tmp, 0, l);
-			}
-			return buffer.toString();
-		} finally {
-			instream.close();
-		}
-	}
-
 	public List<Map<String, Object>> queryAllAreaMap() {
 		return queryDao.queryMap("select cid,id from area order by cid");
 	}
