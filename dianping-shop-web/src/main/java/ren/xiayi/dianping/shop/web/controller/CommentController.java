@@ -28,7 +28,6 @@ public class CommentController extends BaseController {
 	@RequestMapping(value = "netbarComments")
 	@ResponseBody
 	public JsonResponseMsg netbarComment(int s) {
-		JsonResponseMsg res = new JsonResponseMsg();
 		long count = netbarService.count();
 		long maxPage = count / 50;
 		for (int i = s; i < maxPage; i++) {
@@ -49,15 +48,13 @@ public class CommentController extends BaseController {
 			}
 			logger.info("finished comment fetch ---------------------------------- page [" + i + "]");
 		}
-		res.fill(0, "success");
 		logger.info(">>>>>>>>>>>>>>>>>all netbar comment info finished---------------------------------]");
-		return res;
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 	@RequestMapping(value = "netbarCommentsFix")
 	@ResponseBody
 	public JsonResponseMsg netbarCommentFix() {
-		JsonResponseMsg res = new JsonResponseMsg();
 		long count = netbarService.countHasCommentNetbar();
 		long maxPage = count / 50;
 		for (int i = 0; i < maxPage; i++) {
@@ -78,9 +75,8 @@ public class CommentController extends BaseController {
 			}
 			logger.info("finished comment fetch ---------------------------------- page [" + i + "]");
 		}
-		res.fill(0, "success");
 		logger.info(">>>>>>>>>>>>>>>>>all netbar comment info finished---------------------------------]");
-		return res;
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 }

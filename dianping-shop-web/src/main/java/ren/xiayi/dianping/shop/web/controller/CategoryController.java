@@ -17,10 +17,8 @@ public class CategoryController extends BaseController {
 	@RequestMapping(value = "category")
 	@ResponseBody
 	public JsonResponseMsg category() {
-		JsonResponseMsg res = new JsonResponseMsg();
 		categoryService.reloadCategories();
-		res.fill(0, "success");
-		return res;
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 }

@@ -36,7 +36,6 @@ public class NetbarInfoController extends BaseController {
 	@RequestMapping(value = "netbarList")
 	@ResponseBody
 	public JsonResponseMsg netbarList() {
-		JsonResponseMsg res = new JsonResponseMsg();
 		List<Map<String, Object>> areas = areaService.queryAllAreaMap();
 		for (Map<String, Object> area : areas) {
 			long cid = NumberUtils.toLong(area.get("cid").toString());
@@ -52,8 +51,7 @@ public class NetbarInfoController extends BaseController {
 			}
 			logger.info("end------------------------------------- is [" + cid + "," + id + "," + "rank" + "]");
 		}
-		res.fill(0, "success");
-		return res;
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 	/**
@@ -64,7 +62,6 @@ public class NetbarInfoController extends BaseController {
 	@RequestMapping(value = "netbarDetail")
 	@ResponseBody
 	public JsonResponseMsg netbarDetail(int s) {
-		JsonResponseMsg res = new JsonResponseMsg();
 		long count = netbarService.count();
 		long maxPage = count / 50;
 		for (int i = s; i < maxPage; i++) {
@@ -87,9 +84,8 @@ public class NetbarInfoController extends BaseController {
 			}
 			logger.info("finished---------------------------------- page [" + i + "]");
 		}
-		res.fill(0, "success");
 		logger.info(">>>>>>>>>>>>>>>>>all netbar update detail info finished---------------------------------]");
-		return res;
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 	/**
@@ -99,7 +95,6 @@ public class NetbarInfoController extends BaseController {
 	@RequestMapping(value = "netbarDetailRefreshByAddressIsNull")
 	@ResponseBody
 	public JsonResponseMsg netbarDetailRefreshByAddressIsNull() {
-		JsonResponseMsg res = new JsonResponseMsg();
 		long left = 0;
 		long count = netbarService.count(true);
 		left = count;
@@ -129,10 +124,9 @@ public class NetbarInfoController extends BaseController {
 			logger.info(
 					"finished-netbarDetailRefreshByAddressIsNull--------------------------------- page [" + i + "]");
 		}
-		res.fill(0, "success");
 		logger.info(
 				">netbarDetailRefreshByAddressIsNull>>>>>>>>>>>>>>>>all netbar update detail info finished---------------------------------]");
-		return res;
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 	/**
@@ -142,7 +136,6 @@ public class NetbarInfoController extends BaseController {
 	@RequestMapping(value = "netbarDetailRefreshByGeo")
 	@ResponseBody
 	public JsonResponseMsg netbarDetailRefreshByGeo() {
-		JsonResponseMsg res = new JsonResponseMsg();
 		long count = netbarService.count(true);
 		long maxPage = count / 50;
 		for (int i = 0; i < maxPage; i++) {
@@ -166,10 +159,9 @@ public class NetbarInfoController extends BaseController {
 			logger.info(
 					"finished-netbarDetailRefreshByAddressIsNull--------------------------------- page [" + i + "]");
 		}
-		res.fill(0, "success");
 		logger.info(
 				">netbarDetailRefreshByAddressIsNull>>>>>>>>>>>>>>>>all netbar update detail info finished---------------------------------]");
-		return res;
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 }

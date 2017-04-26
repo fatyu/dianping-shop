@@ -28,7 +28,6 @@ public class NetbarImgController extends BaseController {
 	@RequestMapping(value = "netbarImgs")
 	@ResponseBody
 	public JsonResponseMsg netbarImgs(int s) {
-		JsonResponseMsg res = new JsonResponseMsg();
 		long count = netbarService.countNotInImg();
 		long maxPage = count / 50;
 		for (int i = s; i < maxPage; i++) {
@@ -50,9 +49,8 @@ public class NetbarImgController extends BaseController {
 			}
 			logger.info("finished img fetch ---------------------------------- page [" + i + "]");
 		}
-		res.fill(0, "success");
 		logger.info(">>>>>>>>>>>>>>>>>all netbar imgs info finished---------------------------------]");
-		return res;
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 }

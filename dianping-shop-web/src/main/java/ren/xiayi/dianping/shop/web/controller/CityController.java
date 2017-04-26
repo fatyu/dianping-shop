@@ -18,11 +18,8 @@ public class CityController extends BaseController {
 	@RequestMapping(value = "city")
 	@ResponseBody
 	public JsonResponseMsg city() {
-		JsonResponseMsg res = new JsonResponseMsg();
 		cityService.reloadCityInfos();
-		res.fill(0, "success");
-		return res;
-
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 }

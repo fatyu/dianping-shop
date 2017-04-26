@@ -18,10 +18,8 @@ public class AreaController extends BaseController {
 	@RequestMapping(value = "area")
 	@ResponseBody
 	public JsonResponseMsg area() {
-		JsonResponseMsg res = new JsonResponseMsg();
 		areaService.reloadAllArea();//重新加载所有区域数据并保存数据库
-		res.fill(0, "success");
-		return res;
+		return new JsonResponseMsg().fill(0, "success");
 	}
 
 }
