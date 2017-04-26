@@ -1,15 +1,9 @@
 package ren.xiayi.dianping.shop.service;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.math.NumberUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,33 +91,11 @@ public class AreaService {
 	 * 获取指定城市下属地区(市和街道或者商区信息)json数据
 	 * @param httpclient
 	 * @return json字符串
+	 * dpindex没有做IP访问频次限制,故使用直连方式
 	 */
 	private String loadAreaAndStreetInfos(CloseableHttpClient client, long cid) {
-		HttpGet get = new HttpGet("http://dpindex.dianping.com/ajax/regionlist?cityid=" + cid + "&shopids=");
-		CloseableHttpResponse execute = null;
-		try {
-			execute = client.execute(get);
-			HttpEntity entity = execute.getEntity();
-			String string = HttpConnectionUtil.dataConvertToString(entity, Charset.defaultCharset());
-			if (null == entity) {
-				return null;
-			} else if (execute.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-				return null;
-			} else {
-				return string;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		} finally {
-			try {
-				if (execute != null) {
-					execute.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		String uri = "http://dpindex.dianping.com/ajax/regionlist?cityid=" + cid + "&shopids=";
+		return HttpConnectionUtil.get(client, uri);
 	}
 
 	/**

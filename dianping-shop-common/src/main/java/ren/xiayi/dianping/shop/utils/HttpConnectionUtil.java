@@ -14,10 +14,13 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.config.SocketConfig.Builder;
 import org.apache.http.conn.HttpClientConnectionManager;
@@ -154,6 +157,35 @@ public class HttpConnectionUtil {
 		} finally {
 			instream.close();
 		}
+	}
+
+	public static String get(CloseableHttpClient client, String url) {
+		HttpGet get = new HttpGet(url);
+		CloseableHttpResponse execute = null;
+		try {
+			execute = client.execute(get);
+			HttpEntity entity = execute.getEntity();
+			String string = HttpConnectionUtil.dataConvertToString(entity, Charset.defaultCharset());
+			if (null == entity) {
+				return null;
+			} else if (execute.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+				return null;
+			} else {
+				return string;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			try {
+				if (execute != null) {
+					execute.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 }
